@@ -20,7 +20,7 @@ RUN echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && \
     sysctl -w net.ipv4.ip_forward=1
 
 # Step 3: Copy and configure dante-server
-COPY danted.conf /etc/danted.conf
+COPY danted.conf /etc
 RUN systemctl enable danted
 
 # Step 4: Add Cloudflare WARP Connector token
