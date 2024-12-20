@@ -2,7 +2,7 @@
 
 
 - The Code is in initial phase.
-- The docker setup has been done.
+   - The docker setup has been done.
 - I will update the particular after January 2025.
-- Busy for personal works.
+  - Busy for personal works.
 
