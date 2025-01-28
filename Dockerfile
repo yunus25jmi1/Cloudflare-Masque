@@ -1,33 +1,44 @@
-# Use an official lightweight Ubuntu image as the base
 FROM ubuntu:22.04
 
-# Set environment variables to prevent interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update and install dependencies
+# Install base dependencies
 RUN apt-get update && \
-    apt-get install -y curl gnupg apt-transport-https sudo bat dante-server && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    gnupg \
+    apt-transport-https && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Add Cloudflare's public key and repository
-RUN curl https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ jammy main" | \
-    sudo tee /etc/apt/sources.list.d/cloudflare-client.list && \
-    apt-get update && apt-get install -y cloudflare-warp
+# Add Cloudflare repository
+RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | \
+    gpg --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] \
+    https://pkg.cloudflareclient.com/ jammy main" | \
+    tee /etc/apt/sources.list.d/cloudflare-client.list
 
-# Step 2: Enable IP forwarding
+# Install WARP and Dante
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    cloudflare-warp \
+    dante-server && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Configure system
 RUN echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && \
-    sysctl -w net.ipv4.ip_forward=1
+    mkdir -p /var/lib/cloudflare-warp && \
+    touch /var/lib/cloudflare-warp/reg.json && \
+    chmod 600 /var/lib/cloudflare-warp/reg.json
 
-# Step 3: Copy and configure dante-server
-COPY danted.conf /etc
-RUN systemctl enable danted
+# Copy config files
+COPY danted.conf /etc/danted.conf
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Step 4: Add Cloudflare WARP Connector token
-ENV WARP_CONNECTOR_TOKEN="eyJhIjoiMGZhOGNjZTg5Yjk0NTBkOTM1NzE0NWY2ZmU0NDkyY2QiLCJ0IjoiYTQ4OTZjMTQtMjUzYS00YjA5LWFmZDAtNjFmNGE1Y2Y5MzJhIiwicyI6IkVrdG5nV0pDNTBObitLS01sS0xnU0EzV09ENVprZXhNWlhYUHIyYVQ2NUdpWFV6RjlJa1Z3Z2IzYi8vcEJ5eXRGN3FiQU0xcGZFM3hJMUVOZGpRVDFnPT0ifQ=="
+HEALTHCHECK --interval=30s --timeout=10s \
+    CMD curl --socks5 localhost:1080 -# -o /dev/null https://www.cloudflare.com || exit 1
 
-# Run WARP Connector setup and Dante-server on container startup
-CMD warp-cli connector new $WARP_CONNECTOR_TOKEN && \
-    warp-cli connect && \
-    systemctl restart danted && \
-    tail -f /dev/null
+ENTRYPOINT ["/entrypoint.sh"]
