@@ -27,8 +27,13 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     cloudflare-warp \
     dante-server && \
+    nftables && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Provide a dummy policy-rc.d to allow postinst scripts to exit successfully
+RUN echo '#!/bin/sh\nexit 0' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
+
 
 # Configure system
 RUN echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && \
