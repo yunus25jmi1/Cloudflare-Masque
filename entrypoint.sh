@@ -1,30 +1,30 @@
 #!/bin/bash
-# entrypoint.sh
 
-# Start D-Bus if not running
-if ! systemctl is-active --quiet dbus; then
-    echo "Starting dbus..."
-    systemctl start dbus
+# Start D-Bus manually
+echo "Starting dbus manually..."
+mkdir -p /var/run/dbus
+dbus-daemon --system --fork
+
+# Check if Cloudflare WARP is installed
+if ! command -v warp-cli &> /dev/null; then
+    echo "Error: warp-cli not found! Make sure Cloudflare WARP is installed."
+    exit 1
 fi
 
-# Check if Cloudflare WARP is registered, if not, register it
+# Ensure Cloudflare WARP is registered
 if [ ! -f /var/lib/cloudflare-warp/settings.json ]; then
     echo "Cloudflare WARP not registered. Registering..."
-    warp-cli register
-    # Optionally, create empty settings if registration fails
+    warp-cli connector new eyJhIjoiMGZhOGNjZTg5Yjk0NTBkOTM1NzE0NWY2ZmU0NDkyY2QiLCJ0IjoiYTQ4OTZjMTQtMjUzYS00YjA5LWFmZDAtNjFmNGE1Y2Y5MzJhIiwicyI6IkVrdG5nV0pDNTBObitLS01sS0xnU0EzV09ENVprZXhNWlhYUHIyYVQ2NUdpWFV6RjlJa1Z3Z2IzYi8vcEJ5eXRGN3FiQU0xcGZFM3hJMUVOZGpRVDFnPT0ifQ==
     [ ! -f /var/lib/cloudflare-warp/settings.json ] && echo "{}" > /var/lib/cloudflare-warp/settings.json
 fi
 
-# Start the WARP daemon
+# Connect to WARP
+echo "Connecting to Cloudflare WARP..."
 warp-cli connect
 
-# Start firewall service if needed (depending on your configuration)
-# If using ufw or iptables, ensure necessary ports are open
-# sudo ufw allow 2408/tcp
-# sudo ufw allow 2408/udp
-
-# Run the WARP service
+# Run warp-svc in background
+echo "Starting warp-svc..."
 warp-svc &
 
-# Wait for the service to initialize and handle additional startup processes
-wait
+# Keep the container running
+tail -f /dev/null
