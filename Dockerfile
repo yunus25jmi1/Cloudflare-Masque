@@ -1,51 +1,33 @@
-FROM ubuntu:22.04
+# Dockerfile
+FROM ubuntu:20.04
 
+# Set environment variables for non-interactive installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install base dependencies
+# Install dependencies including dbus and Cloudflare WARP
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    ca-certificates \
+    apt-get install -y \
     curl \
+    dbus \
+    iptables \
     gnupg \
-    apt-transport-https && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    && apt-get clean
 
-# Provide a dummy systemctl to satisfy postinst scripts
-RUN echo '#!/bin/sh\nexit 0' > /usr/bin/systemctl && chmod +x /usr/bin/systemctl
+# Install Cloudflare WARP
+RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | tee /etc/apt/trusted.gpg.d/cloudflare.asc
+RUN echo "deb [signed-by=/etc/apt/trusted.gpg.d/cloudflare.asc] https://pkg.cloudflareclient.com/debian stable main" | tee /etc/apt/sources.list.d/cloudflare-client.list
+RUN apt-get update && apt-get install -y cloudflare-warp
 
-# Add Cloudflare repository
-RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | \
-    gpg --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] \
-    https://pkg.cloudflareclient.com/ jammy main" | \
-    tee /etc/apt/sources.list.d/cloudflare-client.list
+# Ensure necessary directories and permissions
+RUN mkdir -p /var/lib/cloudflare-warp && \
+    touch /var/lib/cloudflare-warp/settings.json /var/lib/cloudflare-warp/consumer-settings.json
 
-# Install WARP and Dante
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    cloudflare-warp \
-    dante-server && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Provide a dummy policy-rc.d to allow postinst scripts to exit successfully
-RUN echo '#!/bin/sh\nexit 0' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
-
-# Configure system
-RUN echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && \
-    mkdir -p /var/lib/cloudflare-warp && \
-    touch /var/lib/cloudflare-warp/reg.json && \
-    chmod 600 /var/lib/cloudflare-warp/reg.json && \
-    mkdir -p /var/run/danted
-
-# Copy config files
-COPY danted.conf /etc/danted.conf
+# Entry point script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-HEALTHCHECK --interval=30s --timeout=10s \
-    CMD curl --socks5 localhost:1080 -# -o /dev/null https://www.cloudflare.com || exit 1
+# Expose necessary ports
+EXPOSE 2408
 
+# Start the WARP service using the entrypoint script
 ENTRYPOINT ["/entrypoint.sh"]
