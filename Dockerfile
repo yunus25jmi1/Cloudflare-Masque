@@ -33,15 +33,12 @@ RUN apt-get update && \
 # Provide a dummy policy-rc.d to allow postinst scripts to exit successfully
 RUN echo '#!/bin/sh\nexit 0' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
 
-
 # Configure system
 RUN echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && \
     mkdir -p /var/lib/cloudflare-warp && \
     touch /var/lib/cloudflare-warp/reg.json && \
-    chmod 600 /var/lib/cloudflare-warp/reg.json
-
-RUN sed -i "s/^external:.*/external: $(ip -o -4 route show to default | awk '{print $5}')/" /etc/danted.conf
-
+    chmod 600 /var/lib/cloudflare-warp/reg.json && \
+    mkdir -p /var/run/danted
 
 # Copy config files
 COPY danted.conf /etc/danted.conf
