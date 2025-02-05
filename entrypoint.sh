@@ -1,26 +1,20 @@
 #!/bin/bash
 
-set -e  # Exit on error
+set -e  # Exit immediately if a command exits with a non-zero status
 
 echo "Starting dbus manually..."
 mkdir -p /var/run/dbus
 dbus-daemon --system --fork
 
-# Check if Cloudflare WARP is installed
-if ! command -v warp-cli &> /dev/null; then
-    echo "Error: warp-cli not found! Make sure Cloudflare WARP is installed."
-    exit 1
-fi
-
 # Start Cloudflare WARP daemon first
 echo "Starting warp-svc..."
 warp-svc &
-sleep 10  # Allow time for the daemon to initialize
+sleep 2  # Allow time for warp-svc to initialize
 
-# Ensure Cloudflare WARP is registered
+# Check if Cloudflare WARP is registered
 if [ ! -f /var/lib/cloudflare-warp/settings.json ]; then
     if [ -z "$WARP_AUTH_TOKEN" ]; then
-        echo "Error: Cloudflare WARP registration token not provided!"
+        echo "Error: Cloudflare WARP registration token (WARP_AUTH_TOKEN) not provided!"
         exit 1
     fi
     echo "Registering Cloudflare WARP..."
@@ -28,8 +22,8 @@ if [ ! -f /var/lib/cloudflare-warp/settings.json ]; then
     warp-cli --accept-tos set-license "$WARP_AUTH_TOKEN"
 fi
 
-# Connect to Cloudflare WARP
-echo "Connecting to Cloudflare WARP..."
+# Ensure Cloudflare WARP is enabled
+echo "Enabling Cloudflare WARP..."
 warp-cli --accept-tos connect
 
 # Keep the container running
