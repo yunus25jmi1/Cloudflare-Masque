@@ -40,6 +40,9 @@ RUN echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && \
     touch /var/lib/cloudflare-warp/reg.json && \
     chmod 600 /var/lib/cloudflare-warp/reg.json
 
+RUN NET_INTERFACE=$(ip -o -4 route show to default | awk '{print $5}')
+RUN sed -i "s/^external:.*/external: $NET_INTERFACE/" /etc/danted.conf
+
 # Copy config files
 COPY danted.conf /etc/danted.conf
 COPY entrypoint.sh /entrypoint.sh
