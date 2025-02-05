@@ -12,6 +12,9 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Provide a dummy systemctl to satisfy postinst scripts
+RUN echo '#!/bin/sh\nexit 0' > /usr/bin/systemctl && chmod +x /usr/bin/systemctl
+
 # Add Cloudflare repository
 RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | \
     gpg --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
