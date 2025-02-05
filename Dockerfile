@@ -14,9 +14,11 @@ RUN apt-get update && \
     && apt-get clean
 
 # Install Cloudflare WARP
-RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | tee /etc/apt/trusted.gpg.d/cloudflare.asc
-RUN echo "deb [signed-by=/etc/apt/trusted.gpg.d/cloudflare.asc] https://pkg.cloudflareclient.com/debian stable main" | tee /etc/apt/sources.list.d/cloudflare-client.list
-RUN apt-get update && apt-get install -y cloudflare-warp
+RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | \
+    gpg --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] \
+    https://pkg.cloudflareclient.com/ jammy main" | \
+    tee /etc/apt/sources.list.d/cloudflare-client.list
 
 # Ensure necessary directories and permissions
 RUN mkdir -p /var/lib/cloudflare-warp && \
