@@ -1,7 +1,10 @@
-#!/bin/bash
-set -eo pipefail
 export DBUS_FATAL_WARNINGS=0
 export NO_AT_BRIDGE=1
+#!/bin/bash
+export DBUS_FATAL_WARNINGS=0
+export NO_AT_BRIDGE=1
+set -eo pipefail
+
 
 
 # Start the Cloudflare WARP service in the background
@@ -14,7 +17,7 @@ while ! warp-cli --accept-tos status >/dev/null 2>&1; do
 done
 
 # Restore registration from environment variable if missing
-if [ ! -f /var/lib/cloudflare-warp/reg.json ]; then
+if [ ! -s /var/lib/cloudflare-warp/reg.json ]; then
     echo "Restoring WARP registration..."
     if [ -n "$WARP_REGISTRATION_JSON" ]; then
         echo "$WARP_REGISTRATION_JSON" | base64 -d > /var/lib/cloudflare-warp/reg.json
