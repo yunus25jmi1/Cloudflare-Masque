@@ -1,41 +1,37 @@
 #!/bin/bash
 set -eo pipefail
+export DBUS_FATAL_WARNINGS=0
+export NO_AT_BRIDGE=1
+
 
 # Start the Cloudflare WARP service in the background
-warp-svc &
+warp-svc --config=/var/lib/cloudflare-warp &
 
-# Wait for the Warp daemon to be ready
+# Wait for the WARP daemon to be ready
 echo "Waiting for WARP daemon..."
 while ! warp-cli --accept-tos status >/dev/null 2>&1; do
     sleep 1
 done
 
-# If registration file is missing, create a new registration
+# Restore registration from environment variable if missing
 if [ ! -f /var/lib/cloudflare-warp/reg.json ]; then
-    echo "Creating new WARP registration..."
-    warp-cli --accept-tos registration new
+    echo "Restoring WARP registration..."
+    if [ -n "$WARP_REGISTRATION_JSON" ]; then
+        echo "$WARP_REGISTRATION_JSON" | base64 -d > /var/lib/cloudflare-warp/reg.json
+    else
+        echo "Creating new WARP registration..."
+        warp-cli --accept-tos registration new
+        cat /var/lib/cloudflare-warp/reg.json | base64 > /var/lib/cloudflare-warp/reg.b64
+        echo "Save this value as WARP_REGISTRATION_JSON: $(cat /var/lib/cloudflare-warp/reg.b64)"
+    fi
 fi
 
-# If a WARP connector token is provided, set up the connector
-if [ -n "$WARP_CONNECTOR_TOKEN" ]; then
-    echo "Setting up WARP connector..."
-    warp-cli --accept-tos connector new "$WARP_CONNECTOR_TOKEN"
-fi
+warp-cli --accept-tos settings set-mode proxy
 
-# Establish the WARP connection
-echo "Connecting to WARP..."
+# Connect WARP
 warp-cli --accept-tos connect
-
-# Display current connection status
-echo "Connection status:"
 warp-cli --accept-tos status
 
-# Wait until the status shows "Connected"
-echo "Waiting for WARP connection..."
-while ! warp-cli --accept-tos status | grep -q "Connected"; do
-    sleep 1
-done
-
-# Start Dante in the foreground (do not daemonize)
+# Start Dante proxy
 echo "Starting Dante SOCKS5 proxy..."
 exec /usr/sbin/danted -f /etc/danted.conf -D
