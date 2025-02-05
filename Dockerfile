@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
 
 # Ensure Cloudflare WARP is installed
 RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | tee /etc/apt/trusted.gpg.d/cloudflare.asc \
-    && echo "deb [signed-by=/etc/apt/trusted.gpg.d/cloudflare.asc] https://pkg.cloudflareclient.com/debian stable main" | tee /etc/apt/sources.list.d/cloudflare-client.list \
+    && echo "deb [signed-by=/etc/apt/trusted.gpg.d/cloudflare.asc] https://pkg.cloudflareclient.com/$(lsb_release -cs) main" | tee /etc/apt/sources.list.d/cloudflare-client.list \
     && apt-get update \
     && apt-get install -y cloudflare-warp \
     && apt-get clean
