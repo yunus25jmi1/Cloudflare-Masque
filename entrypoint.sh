@@ -1,12 +1,9 @@
-export DBUS_FATAL_WARNINGS=0
-export NO_AT_BRIDGE=1
 #!/bin/bash
 export DBUS_FATAL_WARNINGS=0
 export NO_AT_BRIDGE=1
 set -eo pipefail
 
-
-
+warp-svc
 # Start the Cloudflare WARP service in the background
 warp-svc --config=/var/lib/cloudflare-warp &
 
