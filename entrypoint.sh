@@ -26,7 +26,7 @@ if [ ! -f /var/lib/cloudflare-warp/reg.json ]; then
     fi
 fi
 
-warp-cli --accept-tos settings set-mode proxy
+warp-cli --accept-tos mode proxy
 
 # Connect WARP
 warp-cli --accept-tos connect
