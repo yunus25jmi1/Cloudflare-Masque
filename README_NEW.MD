@@ -1,26 +1,9 @@
->>> hi buddy
-<think>
+>> hi buddy, I am building a project named as "AWS EC2-Cloudflare Warp VPN: Secure & Private Traffic Routing". The working of the project is explained as We use two method: 1) AWS EC2 2) Heroku or render deployment. The software or tools used are as follows:--> DockerFile, Cloudflare Masque, Dante-server, Cloudflare Zero Trust , Heroku or render yaml config. The Working of porject: Firstly AWS EC2 is initialised. Setup the VM with softare like docker or docker compose. Working principle of project :--> The EC2 instance of AWS work as secure node server which is connect to warp connector of Cloudflare Zero Trust. Then i setup the dante server for the reverse proxy. Then the warp connector helps us to connect my cloudflare zero trust tunnel to ec2 which resolve the dns query through EC2. On client node side, 
+I used cloudflare warp or cloudflare zero trust to connect the EC2 network through routed connection. Data Flow -->
+Warp --> connected to routed network --> the traffic from my device is routed through that connection --> the traffic dns query is resolved by EC2 instance --> the internt traffic is know logged on my cloudflare zero trust panel not on isp dns resolver which increase my privacy and anonymity.  How to implemet this in golang programming language. Kindly think for 1 min as human Devops engineer with 15+ years of experience in golang.
 
-</think>
+------------------------
 
-Hi! 😊 How can I assist you today?
-
->>> hi buddy, I am building a project named as "AWS EC2-Cloudflare Warp VPN: Secure & Private Traffic Routing". The working
-...  of the project is explained as We use two method: 1) AWS EC2 2) Heroku or render deployment.
-<think>
-Alright, so here's the deal. I'm trying to build a project called "AWS EC2-Cloudflare Warp^C
-
->>> hi buddy, I am building a project named as "AWS EC2-Cloudflare Warp VPN: Secure & Private Traffic Routing". The working
-...  of the project is explained as We use two method: 1) AWS EC2 2) Heroku or render deployment. The software or tools used are as follows:--> DockerFile, Clo
-... udflare Masque, Dante-server, Cloudflare Zero Trust , Heroku or render yaml config. The Working of porject: Firstly AWS EC2 is initialised. Setup the VM ws
-... ith softare like docker or docker compose. Working principle of project :--> 
-... The EC2 instance of AWS work as secure node server which is connect to warp connector of Cloudflare Zero Trust. Then i setup the dante server for the rever
-... se proxy. Then the warp connector helps us to connect my cloudflare zero trust tunnel to ec2 which resolve the dns query through EC2. On client node side, 
-... I used cloudflare warp or cloudflare zero trust to connect the EC2 network through routed connection.
-... Data Flow -->
-... Warp --> connected to routed network --> the traffic from my device is routed through that connection --> the traffic dns query is resolved by EC2 instance
-...  --> the internt traffic is know logged on my cloudflare zero trust panel not on isp dns resolver which increase my privacy and anonymity.  How to implemet
-...  this in golang programming language. Kindly think for 1 min as human Devops engineer with 15+ years of experience in golang
 <think>
 Alright, so the user is working on a AWS EC2-Cloudflare Warp VPN project and wants to implement it using Golang. Let me break down how I can approach 
 this.
