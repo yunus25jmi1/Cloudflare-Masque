@@ -3,5 +3,4 @@ services:
     name: cloudflare-warp
     env: docker
     plan: free
-    region: oregon
     dockerCommand: "/entrypoint.sh"
