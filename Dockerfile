@@ -1,20 +1,41 @@
-FROM debian:latest
+FROM alpine:latest
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    curl gnupg dbus lsb-release
+# Install dependencies for fetching binaries and processing config
+RUN apk add --no-cache curl grep sed jq ca-certificates
 
-# Ensure Cloudflare WARP is installed with the updated keyring method
-RUN curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg \
-    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
-    | tee /etc/apt/sources.list.d/cloudflare-client.list \
-    && apt-get update \
-    && apt-get install -y cloudflare-warp \
-    && apt-get clean
+# Set versions
+ARG WGCF_VERSION=2.2.22
+ARG WIREPROXY_VERSION=1.0.9
+ARG GOST_VERSION=2.11.5
 
-# Add entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Download wgcf (for account registration)
+RUN curl -fsSL "https://github.com/ViRb3/wgcf/releases/download/v${WGCF_VERSION}/wgcf_${WGCF_VERSION}_linux_amd64" -o /usr/local/bin/wgcf \
+    && chmod +x /usr/local/bin/wgcf
 
-# Start entrypoint script
-CMD ["/entrypoint.sh"]
+# Download wireproxy (for userspace networking)
+RUN curl -fsSL "https://github.com/pufferffish/wireproxy/releases/download/v${WIREPROXY_VERSION}/wireproxy_linux_amd64.tar.gz" -o wireproxy.tar.gz \
+    && tar -xzf wireproxy.tar.gz -C /usr/local/bin/ \
+    && rm wireproxy.tar.gz \
+    && chmod +x /usr/local/bin/wireproxy
+
+# Download gost (for WebSocket tunneling)
+RUN curl -fsSL "https://github.com/ginuerzh/gost/releases/download/v${GOST_VERSION}/gost-linux-amd64-${GOST_VERSION}.gz" -o gost.gz \
+    && gzip -d gost.gz \
+    && mv gost /usr/local/bin/gost \
+    && chmod +x /usr/local/bin/gost
+
+# Setup workspace
+WORKDIR /app
+COPY entrypoint.sh /app/entrypoint.sh
+COPY healthcheck.sh /app/healthcheck.sh
+RUN chmod +x /app/entrypoint.sh /app/healthcheck.sh
+
+# Expose SOCKS5 port
+EXPOSE 1080 8080
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD /app/healthcheck.sh || exit 1
+
+# Run
+CMD ["/app/entrypoint.sh"]

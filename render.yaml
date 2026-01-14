@@ -1,6 +1,18 @@
 services:
   - type: web
-    name: cloudflare-warp
+    name: cloudflare-masque
     env: docker
     plan: free
-    dockerCommand: "/entrypoint.sh"
+    # Let the Dockerfile's CMD handle the start command to ensure environment is set up correctly
+    # dockerCommand: "/app/entrypoint.sh" 
+    envVars:
+      - key: WG_PRIVATE_KEY
+        sync: false
+      - key: WG_PEER_PUBLIC_KEY
+        sync: false
+      - key: WG_IPV6
+        sync: false
+      - key: WG_IPV4
+        sync: false
+      - key: WG_ENDPOINT
+        sync: false
